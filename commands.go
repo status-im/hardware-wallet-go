@@ -21,6 +21,7 @@ const (
 	InsRemoveKey            = 0xD3
 	InsVerifyPIN            = 0x20
 	InsChangePIN            = 0x21
+	InsLoadKey              = 0xD0
 	InsDeriveKey            = 0xD1
 	InsExportKey            = 0xC2
 	InsSign                 = 0xC0
@@ -43,9 +44,12 @@ const (
 	P1ExportKeyCurrent              = uint8(0x00)
 	P1ExportKeyDerive               = uint8(0x01)
 	P1ExportKeyDeriveAndMakeCurrent = uint8(0x02)
+	P1LoadKeyKeyPair                = uint8(0x01)
+	P1LoadKeyKeyPairExtended        = uint8(0x02)
+	P1LoadKeySeed                   = uint8(0x03)
 
-	P2ExportKeyPrivateAndPublic = uint8(0x00)
-	P2ExportKeyPublicOnly       = uint8(0x01)
+	P2ExportKeyPrivateAndPublic     = uint8(0x00)
+	P2ExportKeyPublicOnly           = uint8(0x01)
 
 	SwNoAvailablePairingSlots = 0x6A84
 )
@@ -205,6 +209,27 @@ func NewCommandDeriveKey(pathStr string) (*apdu.Command, error) {
 		0,
 		data.Bytes(),
 	), nil
+}
+
+func NewCommandLoadKey(isSeed bool, isExtended bool, payload []byte) (*apdu.Command) {
+	var p1 uint8
+	var data []byte
+	if isSeed == true {
+		p1 = P1LoadKeySeed
+		data = payload
+	} else if isExtended == true {
+		// isExtended indicates the user has included a chaincode
+		p1 = P1LoadKeyKeyPairExtended
+	} else {
+		p1 = P1LoadKeyKeyPair
+	}
+	return apdu.NewCommand(
+		globalplatform.ClaGp,
+		InsLoadKey,
+		p1,
+		0,
+		data,
+	)
 }
 
 // Export a key
